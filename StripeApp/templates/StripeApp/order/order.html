@@ -6,13 +6,13 @@
 <body>
 <h1>{{ order_name }}</h1>
 <ul>
-{% for item in items %}
-    <li>
-    <h2>{{ item.name }}</h2>
-    </li>
-    <p>{{ item.description }}</p>
-    <p>{{ price }}</p>
-{% endfor %}
+    {% for item in items %}
+        <li>
+            <h2>{{ item.name }}</h2>
+        </li>
+        <p>{{ item.description }}</p>
+        <p>{{ item.price }}</p>
+    {% endfor %}
 </ul>
 <h2>Discount</h2>
     {% if discounts != None %}
@@ -25,14 +25,17 @@
         No Discount
     {% endif %}
 <br />
+<br/>
 <h2>Tax</h2>
-    {% if tax != None %}
+{% if taxs != None %}
+    {% for tax in taxs %}
         {{ tax.percentage }}%
-    {% else %}
-        No Tax
-    {% endif %}
-<br />
-<br />
+    {% endfor %}
+{% else %}
+    No Tax
+{% endif %}
+<br/>
+<br/>
 <button id="buy-button">Buy</button>
 <script type="text/javascript">
     var stripe = Stripe('{{ PUBLIC_KEY }}');

@@ -11,4 +11,9 @@ urlpatterns = [
     path("order/", views.OrderListView.as_view(), name="orders"),
     path('success/', views.SuccessView.as_view(), name="success"),
     path('cancel/', views.CancelledView.as_view(), name="cancel"),
+
+    path('create/', views.create, name="create"),
+    path('create-item/', views.createProduct, name="create-item"),
+    path('create-discount/', views.createDiscount, name="create-discount"),
+    path('create-tax/', views.createTax, name="create-tax"),
 ]

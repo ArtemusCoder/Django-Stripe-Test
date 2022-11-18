@@ -1,0 +1,8 @@
+{% extends "StripeApp/base.html" %}
+{% block content %}
+    <ul>
+        <li><a href="{% url 'create-item' %}">Create Item</a></li>
+        <li><a href="{% url 'create-discount' %}"> Create Discount</a></li>
+        <li><a href="{% url 'create-tax' %}">Create Tax</a></li>
+    </ul>
+{% endblock %}

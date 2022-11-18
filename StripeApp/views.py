@@ -1,11 +1,12 @@
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
 import stripe
 from django.views.generic import TemplateView
 from django.views.generic import ListView
 from django.http import HttpResponseNotFound
+from .forms import ProductCreateForm, DiscountCreateForm, TaxCreateForm
 
 from .models import Item, Order
 
@@ -17,15 +18,80 @@ def index(request):
     return render(request, "StripeApp/index.html", context)
 
 
+def create(request):
+    context = {"title": "Create Page"}
+    return render(request, "StripeApp/create.html", context)
+
+
 class ItemListView(ListView):
     model = Item
-    template_name = 'StripeApp/items.html'
+    template_name = 'StripeApp/item/items.html'
     context_object_name = 'items'
+
+
+def createProduct(request):
+    if request.method == 'POST':
+        form = ProductCreateForm(request.POST)
+        if form.is_valid():
+            item = form.save()
+            name = form.cleaned_data.get('name')
+            description = form.cleaned_data.get('description')
+            price = form.cleaned_data.get('price')
+            try:
+                product = stripe.Product.create(name=name, description=description)
+                price_stripe = stripe.Price.create(unit_amount=price, currency='usd', product=product['id'])
+            except:
+                return redirect('cancel')
+            item.price_id = price_stripe['id']
+            item.save()
+            return redirect('items')
+    else:
+        form = ProductCreateForm()
+    return render(request, 'StripeApp/create/create-product.html', {'form': form})
+
+
+def createDiscount(request):
+    if request.method == 'POST':
+        form = DiscountCreateForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            percent_of = form.cleaned_data.get('percent_of')
+            amount_of = form.cleaned_data.get('amount_of')
+            print(percent_of, amount_of)
+            if percent_of is not None and amount_of is not None:
+                return redirect('create-discount')
+            stripe_discount = stripe.Coupon.create(percent_off=percent_of, name=name)
+            discount = form.save()
+            discount.id_stripe = stripe_discount['id']
+            discount.save()
+            return redirect('items')
+    else:
+        form = DiscountCreateForm()
+    return render(request, 'StripeApp/create/create-discount.html', {'form': form})
+
+
+def createTax(request):
+    if request.method == 'POST':
+        form = TaxCreateForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            description = form.cleaned_data.get('description')
+            inclusive = form.cleaned_data.get('inclusive')
+            percentage = form.cleaned_data.get('percentage')
+            stripe_tax = stripe.TaxRate.create(display_name=name, description=description, inclusive=inclusive,
+                                               percentage=percentage)
+            tax = form.save()
+            tax.id_stripe = stripe_tax['id']
+            tax.save()
+            return redirect('items')
+    else:
+        form = TaxCreateForm()
+    return render(request, 'StripeApp/create/create-tax.html', {'form': form})
 
 
 class OrderListView(ListView):
     model = Order
-    template_name = 'StripeApp/orders.html'
+    template_name = 'StripeApp/order/orders.html'
     context_object_name = 'orders'
 
 
@@ -35,18 +101,21 @@ def buy(request, pk):
         item = Item.objects.filter(pk=pk)
         if item.exists():
             item = item[0]
-            session = stripe.checkout.Session.create(
-                success_url=settings.URL + 'success?session_id={CHECKOUT_SESSION_ID}',
-                cancel_url=settings.URL + 'cancel/',
-                line_items=[
-                    {
-                        "price": item.price_id,
-                        "quantity": 1,
-                    },
-                ],
-                mode="payment",
-            )
-            return JsonResponse(session)
+            try:
+                session = stripe.checkout.Session.create(
+                    success_url=settings.URL + 'success?session_id={CHECKOUT_SESSION_ID}',
+                    cancel_url=settings.URL + 'cancel/',
+                    line_items=[
+                        {
+                            "price": item.price_id,
+                            "quantity": 1,
+                        },
+                    ],
+                    mode="payment",
+                )
+                return JsonResponse(session)
+            except:
+                return HttpResponseNotFound("Problems with Stripe: ")
         else:
             return HttpResponseNotFound("No such item")
     else:
@@ -62,16 +131,19 @@ def buy_order(request, pk):
             line_items = []
             for item in order.items.all():
                 line_items.append({"price": item.price_id, "quantity": 1,
-                                   "tax_rates": None if order.tax is None else [order.tax.id_stripe]})
-
-            session = stripe.checkout.Session.create(
-                success_url=settings.URL + 'success?session_id={CHECKOUT_SESSION_ID}',
-                cancel_url=settings.URL + 'cancel/',
-                line_items=line_items,
-                mode="payment",
-                discounts=None if order.discount is None else [{"coupon": order.discount.id_stripe}],
-            )
-            return JsonResponse(session)
+                                   "tax_rates": None if order.tax.count() == 0 else [str(id.id_stripe) for id in
+                                                                                     order.tax.all()]})
+            try:
+                session = stripe.checkout.Session.create(
+                    success_url=settings.URL + 'success?session_id={CHECKOUT_SESSION_ID}',
+                    cancel_url=settings.URL + 'cancel/',
+                    line_items=line_items,
+                    mode="payment",
+                    discounts=None if order.discount is None else [{"coupon": order.discount.id_stripe}],
+                )
+                return JsonResponse(session)
+            except:
+                return HttpResponseNotFound("Problems with Stripe")
         else:
             return HttpResponseNotFound("No such order")
     else:
@@ -84,16 +156,13 @@ def item_detail(request, pk):
         item = Item.objects.filter(pk=pk)
         if item.exists():
             item = item[0]
-            price = stripe.Price.retrieve(
-                item.price_id,
-            )
             content = {
                 "title": item.name,
                 "item": item,
-                "price": "%.2f" % (float(price["unit_amount"]) / 100),
+                "price": "%.2f" % float(item.price / 100),
                 "PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY
             }
-            return render(request, "StripeApp/item.html", content)
+            return render(request, "StripeApp/item/item.html", content)
         else:
             return HttpResponseNotFound("No such item")
     else:
@@ -111,10 +180,10 @@ def order_detail(request, pk):
                 "order_name": order.name,
                 "items": order.items.all(),
                 "discounts": None if order.discount is None else order.discount,
-                "tax": None if order.tax is None else order.tax,
+                "taxs": None if order.tax.count() == 0 else order.tax.all(),
                 "PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY
             }
-            return render(request, "StripeApp/order.html", content)
+            return render(request, "StripeApp/order/order.html", content)
         else:
             return HttpResponseNotFound("No such order")
     else:

@@ -1,0 +1,20 @@
+{% extends "StripeApp/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <h1>Создать Discount</h1>
+    <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h2>Discount Name</h2>
+            {{ form.name }}
+            <br />
+            <h1> Либо Amount of либо Percent of</h1>
+            <h2>Amount of</h2>
+            {{ form.amount_of }}
+            <br />
+            <h2>Percent of</h2>
+            {{ form.percent_of }}
+            <br />
+            <br />
+            <button type="submit">Create</button>
+        </form>
+{% endblock %}
