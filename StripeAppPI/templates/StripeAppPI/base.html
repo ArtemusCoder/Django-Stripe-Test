@@ -3,14 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}</title>
-</head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    {% block head %} {% endblock %}
+  </head>
 <body>
-    <header>
-        <h1 style="display: inline">PaymentIntent</h1>
-        <h2 style="display: inline; padding-left: 20px;"><a href="{% url 'items-paymentintent' %}">Items</a></h2>
-        <h2 style="display: inline; padding-left: 10px;"><a href="{% url 'orders-paymentintent' %}">Orders</a></h2>
-        <h2 style="display: inline; padding-left: 10px;"><a href="{% url 'create' %}">Create</a></h2>
-    </header>
+    <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="{% url 'home' %}">PaymentIntent</a>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'items-paymentintent' %}">Items</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'orders-paymentintent' %}">Orders</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'create' %}">Create</a>
+              </li>
+          </div>
+        </div>
+      </nav>
+      
     {% block content %}{% endblock %}
-</body>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    {% block footer %} {% endblock %}
+  </body>
 </html>

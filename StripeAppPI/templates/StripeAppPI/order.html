@@ -1,9 +1,8 @@
-<html>
-<head>
-    <title>Buy {{ item.name }}</title>
-    <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
+{% extends "StripeAppPI/base.html" %}
+{% block head%}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+{% block content %} 
 <h1>{{ order_name }}</h1>
 <ul>
     {% for item in items %}
@@ -38,32 +37,36 @@
 {{ amount }}
 <br/>
 <br/>
-<div id="card-element" class="MyCardElement">
+<div id="card-element" class="MyCardElement" style="width: 400px;">
  </div>
 <br/>
 <br/>
-<button id="payment-button">Buy</button>
+<button class="btn btn-primary" id="payment-button">Buy</button>
+{% endblock %}
+{% block footer %}
 <script>
     var stripe = Stripe('{{ PUBLIC_KEY }}');
     var elements = stripe.elements();
     var cardElement = elements.create("card");
     cardElement.mount("#card-element");
-
     var buyButton = document.getElementById('payment-button');
     buyButton.addEventListener('click', function () {
-        stripe
-            .confirmCardPayment('{{client_secret}}', {
-                payment_method: {
-                    card: cardElement,
-                }
-            })
-            .then(function (result) {
-                console.log(result)
-                if (result.paymentIntent.status === "succeeded") {
-                    window.location.replace("{{URL}}/success");
-                }
-            });
+        fetch('/payment/buy-order/{{ pk }}', {method: "GET"})
+                    .then(response => response.json())
+                    .then(client_secret =>
+            stripe
+                .confirmCardPayment(client_secret.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                    }
+                })
+                .then(function (result) {
+                    console.log(result)
+                    if (result.paymentIntent.status === "succeeded") {
+                        window.location.replace("{{URL}}/success");
+                    }
+                })
+            );
     });
 </script>
-</body>
-</html>
+{% endblock %}

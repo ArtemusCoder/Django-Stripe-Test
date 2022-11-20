@@ -1,9 +1,9 @@
-<html>
-<head>
-    <title>Buy {{ item.name }}</title>
-    <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
+{% extends "StripeApp/base.html" %}
+{% block head%}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+{% block content %}
+
 <h1>{{ order_name }}</h1>
 <ul>
     {% for item in items %}
@@ -37,6 +37,8 @@
 <br/>
 <br/>
 <button id="buy-button">Buy</button>
+{% endblock %}
+{% block footer %}
 <script type="text/javascript">
     var stripe = Stripe('{{ PUBLIC_KEY }}');
     var buyButton = document.getElementById('buy-button');
@@ -46,5 +48,4 @@
             .then(session => stripe.redirectToCheckout({sessionId: session.id}))
     });
 </script>
-</body>
-</html>
+{% endblock %}
