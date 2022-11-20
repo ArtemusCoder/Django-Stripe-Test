@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <header>
+        <h1 style="display: inline">PaymentIntent</h1>
+        <h2 style="display: inline; padding-left: 20px;"><a href="{% url 'items-paymentintent' %}">Items</a></h2>
+        <h2 style="display: inline; padding-left: 10px;"><a href="{% url 'orders-paymentintent' %}">Orders</a></h2>
+        <h2 style="display: inline; padding-left: 10px;"><a href="{% url 'create' %}">Create</a></h2>
+    </header>
+    {% block content %}{% endblock %}
+</body>
+</html>

@@ -101,6 +101,7 @@ def createOrder(request):
         form = OrderCreateForm()
     return render(request, 'StripeApp/create/create-order.html', {'form': form})
 
+
 class OrderListView(ListView):
     model = Order
     template_name = 'StripeApp/order/orders.html'

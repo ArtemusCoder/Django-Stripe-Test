@@ -1,0 +1,69 @@
+<html>
+<head>
+    <title>Buy {{ item.name }}</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+<h1>{{ order_name }}</h1>
+<ul>
+    {% for item in items %}
+        <li>
+            <h2>{{ item.name }}</h2>
+        </li>
+        <p>{{ item.description }}</p>
+        <p>{{ item.price }}</p>
+    {% endfor %}
+</ul>
+<h2>Discount</h2>
+    {% if discounts != None %}
+        {% if discounts.percent_of != None %}
+            {{ discounts.percent_of }} %
+        {% else %}
+            {{ discounts.amount_of }}
+        {% endif %}
+    {% else %}
+        No Discount
+    {% endif %}
+<br />
+<br/>
+<h2>Tax</h2>
+{% if taxs != None %}
+    {% for tax in taxs %}
+        {{ tax.percentage }}%
+    {% endfor %}
+{% else %}
+    No Tax
+{% endif %}
+<h2>Amount</h2>
+{{ amount }}
+<br/>
+<br/>
+<div id="card-element" class="MyCardElement">
+ </div>
+<br/>
+<br/>
+<button id="payment-button">Buy</button>
+<script>
+    var stripe = Stripe('{{ PUBLIC_KEY }}');
+    var elements = stripe.elements();
+    var cardElement = elements.create("card");
+    cardElement.mount("#card-element");
+
+    var buyButton = document.getElementById('payment-button');
+    buyButton.addEventListener('click', function () {
+        stripe
+            .confirmCardPayment('{{client_secret}}', {
+                payment_method: {
+                    card: cardElement,
+                }
+            })
+            .then(function (result) {
+                console.log(result)
+                if (result.paymentIntent.status === "succeeded") {
+                    window.location.replace("{{URL}}/success");
+                }
+            });
+    });
+</script>
+</body>
+</html>

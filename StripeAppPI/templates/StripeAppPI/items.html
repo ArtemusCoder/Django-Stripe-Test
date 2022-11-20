@@ -1,0 +1,8 @@
+{% extends "StripeAppPI/base.html" %}
+{% block content %}
+    <ul>
+    {% for item in items %}
+        <li><a href="{% url 'item-paymentintent' item.pk %}">{{ item.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock %}

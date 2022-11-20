@@ -19,5 +19,6 @@ from StripeApp import urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('StripeApp.urls'))
+    path('', include('StripeApp.urls')),
+    path('', include('StripeAppPI.urls'))
 ]

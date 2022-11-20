@@ -1,3 +1,11 @@
-{% extends "StripeApp/base.html" %}
-{% block content %}
-{% endblock %}
+<html>
+    <head>
+        <title>Choice</title>
+    </head>
+    <body>
+        <ul>
+            <li><a href="{% url 'items' %}">Checkout Session</a></li>
+            <li><a href="{% url 'items-paymentintent' %}">PaymentIntent</a></li>
+        </ul>
+    </body>
+</html>

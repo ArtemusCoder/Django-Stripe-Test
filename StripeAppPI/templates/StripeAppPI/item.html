@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+<h1>{{ item.name }}</h1>
+<p>{{ item.description }}</p>
+<p>{{ price }} {{ item.currency }}</p>
+ <div id="card-element" class="MyCardElement">
+ </div>
+<button id="payment-button" data-secret="{{ client_secret }}">
+    Submit Payment
+</button>
+<script>
+    var stripe = Stripe('{{ PUBLIC_KEY }}');
+    var elements = stripe.elements();
+    var cardElement = elements.create("card");
+    cardElement.mount("#card-element");
+
+    var buyButton = document.getElementById('payment-button');
+    buyButton.addEventListener('click', function () {
+        stripe
+            .confirmCardPayment('{{client_secret}}', {
+                payment_method: {
+                    card: cardElement,
+                }
+            })
+            .then(function (result) {
+                console.log(result)
+                if (result.paymentIntent.status === "succeeded") {
+                    window.location.replace("{{URL}}/success");
+                }
+            });
+    });
+</script>
+</body>
+</html>
