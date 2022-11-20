@@ -25,12 +25,16 @@ def item_detail(request, pk):
         item = Item.objects.filter(pk=pk)
         if item.exists():
             item = item[0]
-            intent = stripe.PaymentIntent.create(
-                amount=item.price,
-                currency=item.currency,
-                payment_method_types=["card"],
-                statement_descriptor="Custom descriptor",
-            )
+            try:
+                intent = stripe.PaymentIntent.create(
+                    amount=item.price,
+                    currency=item.currency,
+                    payment_method_types=["card"],
+                    statement_descriptor="Custom descriptor",
+                )
+            except Exception as e:
+                print(e)
+                return HttpResponseNotFound("Something wrong with Payment")
             content = {
                 "title": item.name,
                 "item": item,
@@ -53,14 +57,12 @@ def order_detail(request, pk):
             order = order[0]
             amount = 0.0
             items_sum = sum([int(item.price) for item in order.items.all()])
-            print(items_sum)
             amount = items_sum
             if order.discount is not None:
                 if order.discount.amount_of is None:
                     amount = int(amount - (items_sum * (order.discount.percent_of / 100)))
                 else:
                     amount = amount - order.discount.amount_of
-            print(amount)
             if order.tax.count() != 0:
                 for tax in order.tax.all():
                     if not tax.inclusive:
@@ -68,12 +70,16 @@ def order_detail(request, pk):
                     else:
                         amount = amount - (amount * (tax.percentage / 100))
             amount = int(amount)
-            intent = stripe.PaymentIntent.create(
-                amount=int(amount),
-                currency=order.items.all()[0].currency,
-                payment_method_types=["card"],
-                statement_descriptor="Custom descriptor",
-            )
+            try:
+                intent = stripe.PaymentIntent.create(
+                    amount=int(amount),
+                    currency=order.items.all()[0].currency,
+                    payment_method_types=["card"],
+                    statement_descriptor="Custom descriptor",
+                )
+            except Exception as e:
+                print(e)
+                return HttpResponseNotFound("Something wrong with Payment")
             content = {
                 "pk": order.pk,
                 "order_name": order.name,

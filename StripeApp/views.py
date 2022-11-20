@@ -33,7 +33,7 @@ def createProduct(request):
     if request.method == 'POST':
         form = ProductCreateForm(request.POST)
         if form.is_valid():
-            item = form.save()
+            item = form.save(commit=False)
             name = form.cleaned_data.get('name')
             description = form.cleaned_data.get('description')
             currency = form.cleaned_data.get('currency')
@@ -43,7 +43,7 @@ def createProduct(request):
                 price_stripe = stripe.Price.create(unit_amount=price, currency=currency, product=product['id'])
             except Exception as e:
                 print(e)
-                return redirect('cancel')
+                return HttpResponseNotFound("Something wrong with Payment")
             item.price_id = price_stripe['id']
             item.save()
             return redirect('items')
@@ -62,8 +62,11 @@ def createDiscount(request):
             print(percent_of, amount_of)
             if percent_of is not None and amount_of is not None:
                 return redirect('create-discount')
-            stripe_discount = stripe.Coupon.create(percent_off=percent_of, name=name)
-            discount = form.save()
+            try:
+                stripe_discount = stripe.Coupon.create(percent_off=percent_of, name=name)
+            except Exception as e:
+                return HttpResponseNotFound(e)
+            discount = form.save(commit=False)
             discount.id_stripe = stripe_discount['id']
             discount.save()
             return redirect('items')
@@ -80,9 +83,13 @@ def createTax(request):
             description = form.cleaned_data.get('description')
             inclusive = form.cleaned_data.get('inclusive')
             percentage = form.cleaned_data.get('percentage')
-            stripe_tax = stripe.TaxRate.create(display_name=name, description=description, inclusive=inclusive,
-                                               percentage=percentage)
-            tax = form.save()
+            try:
+                stripe_tax = stripe.TaxRate.create(display_name=name, description=description, inclusive=inclusive,
+                                                percentage=percentage)
+            except Exception as e:
+                print(e)
+                return HttpResponseNotFound("Something wrong with Payment")
+            tax = form.save(commit=False)
             tax.id_stripe = stripe_tax['id']
             tax.save()
             return redirect('items')
@@ -129,7 +136,7 @@ def buy(request, pk):
                 return JsonResponse(session)
             except Exception as e:
                 print(e)
-                return HttpResponseNotFound("Problems with Stripe: ")
+                return HttpResponseNotFound("Problems with Stripe")
         else:
             return HttpResponseNotFound("No such item")
     else:
