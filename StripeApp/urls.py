@@ -16,4 +16,5 @@ urlpatterns = [
     path('create-item/', views.createProduct, name="create-item"),
     path('create-discount/', views.createDiscount, name="create-discount"),
     path('create-tax/', views.createTax, name="create-tax"),
+    path('create-order/', views.createOrder, name="create-order"),
 ]

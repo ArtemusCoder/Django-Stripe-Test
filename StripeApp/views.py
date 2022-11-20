@@ -6,7 +6,7 @@ import stripe
 from django.views.generic import TemplateView
 from django.views.generic import ListView
 from django.http import HttpResponseNotFound
-from .forms import ProductCreateForm, DiscountCreateForm, TaxCreateForm
+from .forms import ProductCreateForm, DiscountCreateForm, TaxCreateForm, OrderCreateForm
 
 from .models import Item, Order
 
@@ -36,11 +36,13 @@ def createProduct(request):
             item = form.save()
             name = form.cleaned_data.get('name')
             description = form.cleaned_data.get('description')
+            currency = form.cleaned_data.get('currency')
             price = form.cleaned_data.get('price')
             try:
                 product = stripe.Product.create(name=name, description=description)
-                price_stripe = stripe.Price.create(unit_amount=price, currency='usd', product=product['id'])
-            except:
+                price_stripe = stripe.Price.create(unit_amount=price, currency=currency, product=product['id'])
+            except Exception as e:
+                print(e)
                 return redirect('cancel')
             item.price_id = price_stripe['id']
             item.save()
@@ -89,6 +91,16 @@ def createTax(request):
     return render(request, 'StripeApp/create/create-tax.html', {'form': form})
 
 
+def createOrder(request):
+    if request.method == 'POST':
+        form = OrderCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('orders')
+    else:
+        form = OrderCreateForm()
+    return render(request, 'StripeApp/create/create-order.html', {'form': form})
+
 class OrderListView(ListView):
     model = Order
     template_name = 'StripeApp/order/orders.html'
@@ -114,7 +126,8 @@ def buy(request, pk):
                     mode="payment",
                 )
                 return JsonResponse(session)
-            except:
+            except Exception as e:
+                print(e)
                 return HttpResponseNotFound("Problems with Stripe: ")
         else:
             return HttpResponseNotFound("No such item")
@@ -142,7 +155,8 @@ def buy_order(request, pk):
                     discounts=None if order.discount is None else [{"coupon": order.discount.id_stripe}],
                 )
                 return JsonResponse(session)
-            except:
+            except Exception as e:
+                print(e)
                 return HttpResponseNotFound("Problems with Stripe")
         else:
             return HttpResponseNotFound("No such order")

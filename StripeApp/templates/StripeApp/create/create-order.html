@@ -1,0 +1,22 @@
+{% extends "StripeApp/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <h1>Создать Order</h1>
+    <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h2>Order Name</h2>
+            {{ form.name }}
+            <br />
+            <h2>Order Items</h2>
+            {{ form.items }}
+            <br />
+            <h2>Order Discount</h2>
+            {{ form.discount }}
+            <br />
+            <h2>Order Tax</h2>
+            {{ form.tax }}
+            <br />
+            <br />
+            <button type="submit">Create</button>
+        </form>
+{% endblock %}
