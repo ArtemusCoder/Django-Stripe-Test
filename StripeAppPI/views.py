@@ -54,11 +54,12 @@ def order_detail(request, pk):
             amount = 0.0
             items_sum = sum([int(item.price) for item in order.items.all()])
             print(items_sum)
+            amount = items_sum
             if order.discount is not None:
                 if order.discount.amount_of is None:
-                    amount = int(items_sum - (items_sum * (order.discount.percent_of / 100)))
+                    amount = int(amount - (items_sum * (order.discount.percent_of / 100)))
                 else:
-                    amount = items_sum - order.discount.amount_of
+                    amount = amount - order.discount.amount_of
             print(amount)
             if order.tax.count() != 0:
                 for tax in order.tax.all():

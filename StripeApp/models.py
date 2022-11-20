@@ -37,7 +37,7 @@ class Order(models.Model):
     name = models.CharField(max_length=255)
     items = models.ManyToManyField(Item)
     discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, null=True, blank=True)
-    tax = models.ManyToManyField(Tax)
+    tax = models.ManyToManyField(Tax, null=True, blank=True)
 
     def __str__(self):
         return "ID: " + str(self.pk) + " - " + self.name
