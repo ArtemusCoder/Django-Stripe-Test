@@ -49,15 +49,14 @@ def order_buy(request, pk):
             amount = items_sum
             if order.discount is not None:
                 if order.discount.amount_of is None:
-                    amount = int(amount - (items_sum * (order.discount.percent_of / 100)))
+                    amount = float(amount - (items_sum * (order.discount.percent_of / 100)))
                 else:
                     amount = amount - order.discount.amount_of
             if order.tax.count() != 0:
+                tax_sum = 0
                 for tax in order.tax.all():
-                    if not tax.inclusive:
-                        amount = amount + (amount * (tax.percentage / 100))
-                    else:
-                        amount = amount - (amount * (tax.percentage / 100))
+                    tax_sum += (amount * (tax.percentage / 100))
+                amount += tax_sum
             amount = round(amount)
             try:
                 intent = stripe.PaymentIntent.create(
@@ -105,11 +104,10 @@ def order_detail(request, pk):
                 else:
                     amount = amount - order.discount.amount_of
             if order.tax.count() != 0:
+                tax_sum = 0
                 for tax in order.tax.all():
-                    if not tax.inclusive:
-                        amount = amount + (amount * (tax.percentage / 100))
-                    else:
-                        amount = amount - (amount * (tax.percentage / 100))
+                    tax_sum += (amount * (tax.percentage / 100))
+                amount += tax_sum
             amount = round(amount)
             content = {
                 "pk": order.pk,
